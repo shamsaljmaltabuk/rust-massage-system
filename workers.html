@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rust Sports Massage Al Safa - Workers Panel</title>
+
+  <style>
+    body{
+      margin:0;
+      font-family:Arial;
+      background:#0f172a;
+      color:white;
+      text-align:center;
+    }
+
+    header{
+      background:#111827;
+      padding:20px;
+      font-size:22px;
+      font-weight:bold;
+    }
+
+    #display{
+      font-size:40px;
+      margin-top:40px;
+      padding:20px;
+      background:#1e293b;
+      border-radius:15px;
+      min-height:120px;
+      transition:0.3s;
+    }
+
+    .glow{
+      animation: glow 1s infinite alternate;
+    }
+
+    @keyframes glow{
+      from { box-shadow:0 0 10px #22c55e; }
+      to { box-shadow:0 0 25px #22c55e; }
+    }
+
+    button{
+      padding:12px 20px;
+      margin:10px;
+      font-size:16px;
+      border:none;
+      border-radius:10px;
+      cursor:pointer;
+    }
+
+    #startBtn{ background:#3b82f6; color:white; }
+    #approvedBtn{ background:#22c55e; color:white; display:none; }
+    #refreshBtn{ background:#f59e0b; color:black; }
+  </style>
+</head>
+
+<body>
+
+<header>
+  Rust Sports Massage Al Safa - Workers Panel 🔔
+</header>
+
+<button id="startBtn">Enable Sound 🔔</button>
+<button id="refreshBtn" onclick="location.reload()">Refresh 🔄</button>
+
+<div id="display">Waiting for orders...</div>
+
+<button id="approvedBtn">Approved ✔</button>
+
+<audio id="ring" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" loop></audio>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDxSa9SEtAB8cfw8W2r0Mt_XBXUJSn1II",
+  authDomain: "worker-me.firebaseapp.com",
+  databaseURL: "https://worker-me-default-rtdb.firebaseio.com",
+  projectId: "worker-me",
+  storageBucket: "worker-me.firebasestorage.app",
+  messagingSenderId: "84141160865",
+  appId: "1:84141160865:web:bdf89dba7e6244339973e0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let ring = document.getElementById("ring");
+let soundEnabled = false;
+let stopTimeout;
+let currentKey = null;
+
+// 🔔 تفعيل الصوت
+document.getElementById("startBtn").addEventListener("click", async () => {
+  await ring.play().catch(()=>{});
+  ring.pause();
+  ring.currentTime = 0;
+
+  soundEnabled = true;
+  document.getElementById("startBtn").style.display = "none";
+});
+
+// 🔥 استقبال الطلبات
+db.ref("orders").limitToLast(1).on("child_added", (snap) => {
+  currentKey = snap.key;
+  let data = snap.val();
+
+  if(data.status === "cleared") return;
+
+  showOrder(data.text);
+});
+
+// 🟢 عند تحميل الصفحة (يحافظ على الحالة بعد Refresh)
+window.onload = () => {
+  db.ref("orders").limitToLast(1).once("child_added", (snap) => {
+    let data = snap.val();
+
+    if(data && data.status === "active"){
+      currentKey = snap.key;
+      showOrder(data.text);
+    }
+  });
+};
+
+// 🟢 عرض الطلب
+function showOrder(text){
+  let box = document.getElementById("display");
+  box.innerText = text;
+  box.classList.add("glow");
+
+  document.getElementById("approvedBtn").style.display = "inline-block";
+
+  if(soundEnabled){
+    ring.currentTime = 0;
+    ring.play();
+  }
+
+  clearTimeout(stopTimeout);
+  stopTimeout = setTimeout(stopAlarm, 20000);
+}
+
+// 🟢 Approved
+document.getElementById("approvedBtn").addEventListener("click", stopAlarm);
+
+function stopAlarm(){
+  ring.pause();
+  ring.currentTime = 0;
+
+  document.getElementById("approvedBtn").style.display = "none";
+
+  let box = document.getElementById("display");
+  box.classList.remove("glow");
+  box.innerText = "Waiting for orders...";
+
+  // 🔥 تحديث Firebase
+  if(currentKey){
+    db.ref("orders/" + currentKey).update({
+      status: "cleared"
+    });
+  }
+}
+</script>
+
+</body>
+</html>

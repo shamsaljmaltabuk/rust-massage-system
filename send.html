@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reception</title>
+</head>
+
+<body style="text-align:center;font-family:Arial;padding:50px;">
+
+<h2>Reception Panel</h2>
+
+<input id="msg" placeholder="اكتب الطلب" style="padding:10px;width:300px;">
+<br><br>
+
+<button onclick="send()">SEND</button>
+
+<!-- Firebase CDN -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDxSa9SEtAB8cfw8W2r0Mt_XBXUJSn1II",
+  authDomain: "worker-me.firebaseapp.com",
+  databaseURL: "https://worker-me-default-rtdb.firebaseio.com",
+  projectId: "worker-me",
+  storageBucket: "worker-me.firebasestorage.app",
+  messagingSenderId: "84141160865",
+  appId: "1:84141160865:web:bdf89dba7e6244339973e0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+function send(){
+  let msg = document.getElementById("msg").value;
+
+  db.ref("orders").push({
+    text: msg,
+    time: Date.now()
+  });
+
+  alert("Sent!");
+  document.getElementById("msg").value = "";
+}
+</script>
+
+</body>
+</html>
