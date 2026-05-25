@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Rust Sports Massage Al Safa - Workers Panel</title>
+  <title>Workers - Rust Sports Massage Al Safa</title>
+
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0f172a">
 
   <style>
     body{
@@ -28,7 +29,6 @@
       background:#1e293b;
       border-radius:15px;
       min-height:120px;
-      transition:0.3s;
     }
 
     .glow{
@@ -61,7 +61,7 @@
   Rust Sports Massage Al Safa - Workers Panel 🔔
 </header>
 
-<button id="startBtn">Enable Sound 🔔</button>
+<button id="startBtn">Enable Sound 🔊</button>
 <button id="refreshBtn" onclick="location.reload()">Refresh 🔄</button>
 
 <div id="display">Waiting for orders...</div>
@@ -89,8 +89,8 @@ const db = firebase.database();
 
 let ring = document.getElementById("ring");
 let soundEnabled = false;
-let stopTimeout;
 let currentKey = null;
+let stopTimeout;
 
 // 🔔 تفعيل الصوت
 document.getElementById("startBtn").addEventListener("click", async () => {
@@ -102,7 +102,7 @@ document.getElementById("startBtn").addEventListener("click", async () => {
   document.getElementById("startBtn").style.display = "none";
 });
 
-// 🔥 استقبال الطلبات
+// 🔥 عند وصول طلب جديد
 db.ref("orders").limitToLast(1).on("child_added", (snap) => {
   currentKey = snap.key;
   let data = snap.val();
@@ -112,7 +112,7 @@ db.ref("orders").limitToLast(1).on("child_added", (snap) => {
   showOrder(data.text);
 });
 
-// 🟢 عند تحميل الصفحة (يحافظ على الحالة بعد Refresh)
+// 🟢 استرجاع الحالة بعد Refresh
 window.onload = () => {
   db.ref("orders").limitToLast(1).once("child_added", (snap) => {
     let data = snap.val();
@@ -127,6 +127,7 @@ window.onload = () => {
 // 🟢 عرض الطلب
 function showOrder(text){
   let box = document.getElementById("display");
+
   box.innerText = text;
   box.classList.add("glow");
 
@@ -150,16 +151,21 @@ function stopAlarm(){
 
   document.getElementById("approvedBtn").style.display = "none";
 
-  let box = document.getElementById("display");
-  box.classList.remove("glow");
-  box.innerText = "Waiting for orders...";
+  document.getElementById("display").innerText = "Waiting for orders...";
+  document.getElementById("display").classList.remove("glow");
 
-  // 🔥 تحديث Firebase
   if(currentKey){
     db.ref("orders/" + currentKey).update({
       status: "cleared"
     });
   }
+}
+</script>
+
+<!-- PWA register -->
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('service-worker.js');
 }
 </script>
 
