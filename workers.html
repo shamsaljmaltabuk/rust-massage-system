@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Workers - Rust Sports Massage Al Safa</title>
+  <title>Workers - Rust Massage</title>
 
-  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
 
   <style>
@@ -18,35 +17,32 @@
     header{
       background:#111827;
       padding:20px;
-      font-size:22px;
+      font-size:20px;
       font-weight:bold;
     }
 
     #display{
       font-size:40px;
-      margin-top:40px;
+      margin:40px auto;
       padding:20px;
       background:#1e293b;
       border-radius:15px;
       min-height:120px;
+      width:80%;
     }
 
     .glow{
-      animation: glow 1s infinite alternate;
-    }
-
-    @keyframes glow{
-      from { box-shadow:0 0 10px #22c55e; }
-      to { box-shadow:0 0 25px #22c55e; }
+      box-shadow:0 0 20px #22c55e;
+      transition:0.3s;
     }
 
     button{
-      padding:12px 20px;
+      padding:12px 18px;
       margin:10px;
-      font-size:16px;
       border:none;
       border-radius:10px;
       cursor:pointer;
+      font-size:15px;
     }
 
     #startBtn{ background:#3b82f6; color:white; }
@@ -74,6 +70,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
+try {
+
 const firebaseConfig = {
   apiKey: "AIzaSyDxSa9SEtAB8cfw8W2r0Mt_XBXUJSn1II",
   authDomain: "worker-me.firebaseapp.com",
@@ -93,36 +91,29 @@ let currentKey = null;
 let stopTimeout;
 
 // 🔔 تفعيل الصوت
-document.getElementById("startBtn").addEventListener("click", async () => {
-  await ring.play().catch(()=>{});
-  ring.pause();
-  ring.currentTime = 0;
+document.getElementById("startBtn").onclick = async () => {
+  try {
+    await ring.play();
+    ring.pause();
+    ring.currentTime = 0;
+    soundEnabled = true;
+    document.getElementById("startBtn").style.display = "none";
+  } catch(e) {
+    alert("Sound blocked - click again");
+  }
+};
 
-  soundEnabled = true;
-  document.getElementById("startBtn").style.display = "none";
-});
-
-// 🔥 عند وصول طلب جديد
+// 🔥 استقبال الطلب
 db.ref("orders").limitToLast(1).on("child_added", (snap) => {
-  currentKey = snap.key;
   let data = snap.val();
+  if(!data) return;
+
+  currentKey = snap.key;
 
   if(data.status === "cleared") return;
 
   showOrder(data.text);
 });
-
-// 🟢 استرجاع الحالة بعد Refresh
-window.onload = () => {
-  db.ref("orders").limitToLast(1).once("child_added", (snap) => {
-    let data = snap.val();
-
-    if(data && data.status === "active"){
-      currentKey = snap.key;
-      showOrder(data.text);
-    }
-  });
-};
 
 // 🟢 عرض الطلب
 function showOrder(text){
@@ -143,7 +134,7 @@ function showOrder(text){
 }
 
 // 🟢 Approved
-document.getElementById("approvedBtn").addEventListener("click", stopAlarm);
+document.getElementById("approvedBtn").onclick = stopAlarm;
 
 function stopAlarm(){
   ring.pause();
@@ -151,8 +142,9 @@ function stopAlarm(){
 
   document.getElementById("approvedBtn").style.display = "none";
 
-  document.getElementById("display").innerText = "Waiting for orders...";
-  document.getElementById("display").classList.remove("glow");
+  let box = document.getElementById("display");
+  box.innerText = "Waiting for orders...";
+  box.classList.remove("glow");
 
   if(currentKey){
     db.ref("orders/" + currentKey).update({
@@ -160,12 +152,9 @@ function stopAlarm(){
     });
   }
 }
-</script>
 
-<!-- PWA register -->
-<script>
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('service-worker.js');
+} catch(err){
+  console.log("Workers error:", err);
 }
 </script>
 
